@@ -29,7 +29,7 @@ class Parser {
   private Expr equality() {
     Expr expr = comparison();
 
-    while (match(BANG_EQUAL, EQUAL_EQAUL)) {
+    while (match(BANG_EQUAL, EQUAL_EQUAL)) {
       Token operator = previous();
       Expr right = comparison();
       expr = new Expr.Binary(expr, operator, right);
@@ -68,7 +68,7 @@ class Parser {
     while (match(SLASH, STAR)) {
       Token operator = previous();
       Expr right = unary();
-      expr = new Expr.Binary(expr, operator, right)
+      expr = new Expr.Binary(expr, operator, right);
     }
 
     return expr;

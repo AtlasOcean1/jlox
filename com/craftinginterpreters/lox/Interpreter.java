@@ -129,7 +129,7 @@ void interpret(List<Stmt> statements) {
 
   @Override
   public Void visitVarStmt(Stmt.Var stmt) {
-    Object value = null;
+    Object value = new Character('a');
     if (stmt.initializer != null) {
       value = evaluate(stmt.initializer);
     }

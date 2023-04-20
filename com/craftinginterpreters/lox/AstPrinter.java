@@ -1,6 +1,14 @@
 package com.craftinginterpreters.lox;
 
-class AstPrinter implements Expr.Visitor<String> {
+import com.craftinginterpreters.lox.Stmt.Block;
+import com.craftinginterpreters.lox.Stmt.Expression;
+import com.craftinginterpreters.lox.Stmt.If;
+import com.craftinginterpreters.lox.Stmt.Print;
+import com.craftinginterpreters.lox.Stmt.Var;
+import com.craftinginterpreters.lox.Stmt.While;
+
+class AstPrinter implements Expr.Visitor<String>,
+                            Stmt.Visitor<String> {
   String print(Expr expr) {
     return expr.accept(this);
   }
@@ -50,5 +58,59 @@ class AstPrinter implements Expr.Visitor<String> {
           new Expr.Literal(45.67)));
       
       System.out.println(new AstPrinter().print(expression));
+  }
+
+  @Override
+  public String visitAssignExpr(Expr.Assign expr) {
+    // TODO Auto-generated method stub
+    throw new UnsupportedOperationException("Unimplemented method 'visitAssignExpr'");
+  }
+
+  @Override
+  public String visitLogicalExpr(Expr.Logical expr) {
+    // TODO Auto-generated method stub
+    throw new UnsupportedOperationException("Unimplemented method 'visitLogicalExpr'");
+  }
+
+  @Override
+  public String visitVariableExpr(Expr.Variable expr) {
+    // TODO Auto-generated method stub
+    throw new UnsupportedOperationException("Unimplemented method 'visitVariableExpr'");
+  }
+
+  @Override
+  public String visitBlockStmt(Block stmt) {
+    // TODO Auto-generated method stub
+    throw new UnsupportedOperationException("Unimplemented method 'visitBlockStmt'");
+  }
+
+  @Override
+  public String visitExpressionStmt(Expression stmt) {
+    // TODO Auto-generated method stub
+    throw new UnsupportedOperationException("Unimplemented method 'visitExpressionStmt'");
+  }
+
+  @Override
+  public String visitIfStmt(If stmt) {
+    // TODO Auto-generated method stub
+    throw new UnsupportedOperationException("Unimplemented method 'visitIfStmt'");
+  }
+
+  @Override
+  public String visitPrintStmt(Print stmt) {
+    // TODO Auto-generated method stub
+    throw new UnsupportedOperationException("Unimplemented method 'visitPrintStmt'");
+  }
+
+  @Override
+  public String visitVarStmt(Var stmt) {
+    // TODO Auto-generated method stub
+    throw new UnsupportedOperationException("Unimplemented method 'visitVarStmt'");
+  }
+
+  @Override
+  public String visitWhileStmt(While stmt) {
+    // TODO Auto-generated method stub
+    throw new UnsupportedOperationException("Unimplemented method 'visitWhileStmt'");
   }
 }

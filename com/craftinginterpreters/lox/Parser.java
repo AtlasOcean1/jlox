@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.craftinginterpreters.lox.Stmt.Break;
+
 import static com.craftinginterpreters.lox.TokenType.*;
 
 class Parser {
@@ -41,6 +43,7 @@ class Parser {
   }
 
   private Stmt statement() {
+    if (match(BREAK)) return breakStatement();
     if (match(FOR)) return forStatement();
     if (match(IF)) return ifStatement();
     if (match(PRINT)) return printStatement();
@@ -48,6 +51,11 @@ class Parser {
     if (match(LEFT_BRACE)) return new Stmt.Block(block()); 
 
     return expressionStatement();
+  }
+
+  private Stmt breakStatement() {
+    consume(SEMICOLON, "expect ';' after break.");
+    return new Stmt.Break();
   }
 
   private Stmt forStatement() {

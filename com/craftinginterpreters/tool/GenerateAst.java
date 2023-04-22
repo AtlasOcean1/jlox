@@ -25,6 +25,7 @@ public class GenerateAst {
            "Expression : Expr expression",
            "If         : Expr condition, Stmt thenBranch," + " Stmt elseBranch",
            "Print      : Expr expression",
+           "Break      : ",
            "Var        : Token name, Expr initializer",
            "While      : Expr condition, Stmt body"
     ));
@@ -82,14 +83,27 @@ public class GenerateAst {
         // Constructor
       writer.println("   " + className + "(" + fieldList + ") {");
 
+      Boolean haveFields = (fieldList.equals("")==false);
+
       // Store parameters in fields.
       String[] fields = fieldList.split(", ");
-      for (String field : fields) {
-        String name = field.split(" ") [1];
-        writer.println("     this." + name + " = " + name + ";");
+
+      if (haveFields){
+        for (String field: fields) {
+          String name = field.split(" ")[1];
+          writer.println("   this." + name + " = " + name + ";");
+        }
       }
 
       writer.println("   }");
+
+      if (haveFields){
+        writer.println();
+        for (String field : fields) {
+          writer.println(" final " + field + ";");
+        }
+
+      }
 
       // Visitor pattern.
       writer.println();
@@ -100,10 +114,7 @@ public class GenerateAst {
       writer.println("   }");
 
       // Fields.
-      writer.println();
-      for (String field : fields) {
-        writer.println("    final " + field + ";");
-      }
+
 
       writer.println("  }");
     }

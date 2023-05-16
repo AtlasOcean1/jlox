@@ -5,9 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
-import com.craftinginterpreters.lox.Stmt.Expression;
-import com.craftinginterpreters.lox.Stmt.Function;
-
 class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   private final Interpreter interpreter;
   private final Stack<Map<String, Boolean>> scopes = new Stack<>();
@@ -26,7 +23,8 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
   private enum ClassType {
     NONE,
-    CLASS
+    CLASS,
+    SUBCLASS
   }
 
   private ClassType currentClass = ClassType.NONE;
@@ -50,14 +48,14 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     Map<String, Boolean> scope = scopes.peek();
     if (scope.containsKey(name.lexeme)) {
-      Lox.error(
+      Lox.error(name,
           "Already a variable with this name in this scope.");
     }
 
     scope.put(name.lexeme, false);
   }
 
-  private void define(Token, name) {
+  private void define(Token name) {
     if (scopes.isEmpty()) return;
     scopes.peek().put(name.lexeme,true);
   }
@@ -87,19 +85,37 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     declare(stmt.name);
     define(stmt.name);
 
+    if (stmt.superclass != null &&
+        stmt.name.lexeme.equals(stmt.superclass.name.lexeme)) {
+      Lox.error(stmt.superclass.name,
+          "A class can't inherit from itself.");
+    }
+
+    if (stmt.superclass != null) {
+      currentClass = ClassType.SUBCLASS;
+      resolve(stmt.superclass);
+    }
+
+    if (stmt.superclass != null) {
+      beginScope();
+      scopes.peek().put("super", true);
+    }
+
     beginScope();
     scopes.peek().put("this", true);
 
-    for (Stmt.Function method : stmt.method) {
+    for (Stmt.Function method : stmt.methods) {
       FunctionType delcaration = FunctionType.METHOD;
       if (method.name.lexeme.equals("init")) {
-        declaration = FunctionType.INITIALIZER;
+        delcaration = FunctionType.INITIALIZER;
       }
 
       resolveFunction(method, delcaration);
     }
 
     endScope();
+
+    if (stmt.superclass != null) endScope();
 
     currentClass = enclosingClass;
     return null;
@@ -187,7 +203,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   public Void visitCallExpr(Expr.Call expr) {
     resolve(expr.callee);
 
-    For (Expr argument : expr.arguments) {
+    for (Expr argument : expr.arguments) {
       resolve(argument);
     }
 
@@ -226,6 +242,20 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   }
 
   @Override
+  public Void visitSuperExpr(Expr.Super expr) {
+    if (currentClass == ClassType.NONE) {
+      Lox.error(expr.keyword,
+      "Can't use 'super' outside of a class");
+    } else if (currentClass != ClassType.SUBCLASS) {
+      Lox.error(expr.keyword, 
+      "Can't use 'super' in a class with no superclass.");
+    }
+    
+    resolveLocal(expr, expr.keyword);
+    return null;
+  }
+
+  @Override
   public Void visitThisExpr(Expr.This expr) {
     if (currentClass == ClassType.NONE) {
       Lox.error(expr.keyword,
@@ -238,7 +268,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   }
 
   @Override
-  public Void visitUnartExpr(Expr.Unary expr) {
+  public Void visitUnaryExpr(Expr.Unary expr) {
     resolve(expr.right);
     return null;
   }
@@ -259,7 +289,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     stmt.accept(this);
   }
 
-  private void resolveFunction(Stmt.Function function) {
+  private void resolveFunction(Stmt.Function function, FunctionType type) {
     FunctionType enclosingFunction = currentFunction;
     currentFunction = type;
 

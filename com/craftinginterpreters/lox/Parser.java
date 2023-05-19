@@ -190,7 +190,7 @@ class Parser {
     }
     consume(RIGHT_PAREN, "Expect ')' after parameters.");
 
-    consume(LEFT_PAREN, "Expect '{' before " + kind + " body.");
+    consume(LEFT_BRACE, "Expect '{' before " + kind + " body.");
     List<Stmt> body = block();
     return new Stmt.Function(name, parameters, body);
   }

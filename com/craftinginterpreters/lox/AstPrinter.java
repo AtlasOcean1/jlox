@@ -74,29 +74,36 @@ class AstPrinter implements Expr.Visitor<String>,
 
   @Override
   public String visitVariableExpr(Expr.Variable expr) {
-    return parenthesize(expr.name.lexeme, expr);
+    return expr.name.lexeme;
   }
 
   @Override
   public String visitCallExpr(Expr.Call expr) {
-    String paren     = parenthesize(expr.paren.lexeme, expr);
-    String callee    = parenthesize("callee", expr.callee);
-
     StringBuilder str = new StringBuilder();
 
+    str.append("(");
+
+    String callee = expr.callee.accept(this);
+    str.append(callee);
+    str.append(" ");
+
     try {
-    for (Expr argument : expr.arguments) {
-      String clojureStr = parenthesize("arguments", argument);
-      str.append(clojureStr);
-    }
-      
+      int idx = 0;
+      for (Expr argument : expr.arguments) {
+      ++idx;
+      String arg = argument.accept(this);
+      str.append(arg);
+        if (idx != expr.arguments.size()) {
+          str.append(" ");
+        }
+      }
+    
     } catch (RuntimeError error) {
       Lox.runtimeError(error);
     }
     
-    str.append(paren);
-    str.append(callee);
-    
+    str.append(")");
+
     return str.toString();
   }
 
@@ -152,7 +159,7 @@ class AstPrinter implements Expr.Visitor<String>,
     
   try {
     for (Stmt statement : stmt.statements) {
-    String clojureStr = parenthesize("block", statement);
+    String clojureStr = parenthesize(statement);
     str.append(clojureStr);
     }
     
@@ -170,9 +177,9 @@ class AstPrinter implements Expr.Visitor<String>,
 
   @Override
   public String visitIfStmt(Stmt.If stmt) {
-    String condition     = parenthesize ("if", stmt.condition);
-    String thenbranch    = parenthesize ("then", stmt.thenBranch);
-    String elsebranchstr = parenthesize ("else", stmt.elseBranch);
+    String condition     = parenthesize ("CONDITION", stmt.condition);
+    String thenbranch    = parenthesize (stmt.thenBranch);
+    String elsebranchstr = parenthesize (stmt.elseBranch);
 
     StringBuilder str = new StringBuilder();
     str.append(condition);
@@ -183,7 +190,7 @@ class AstPrinter implements Expr.Visitor<String>,
 
   @Override
   public String visitPrintStmt(Stmt.Print stmt) {
-    return parenthesize("print", stmt.expression);
+    return parenthesize("println", stmt.expression);
   }
 
   @Override
@@ -193,8 +200,8 @@ class AstPrinter implements Expr.Visitor<String>,
 
   @Override
   public String visitWhileStmt(Stmt.While stmt) {
-    String condition     = parenthesize ("while", stmt.condition);
-    String body          = parenthesize ("body", stmt.body);
+    String condition     = parenthesize ("CONDITION", stmt.condition);
+    String body          = parenthesize (stmt.body);
 
     StringBuilder str = new StringBuilder();
     str.append(condition);
@@ -204,14 +211,14 @@ class AstPrinter implements Expr.Visitor<String>,
 
   @Override
   public String visitClassStmt(Stmt.Class stmt) {
-    String name       = parenthesize(stmt.name.lexeme, stmt);
+    String name       = stmt.name.lexeme;
     String superclass = parenthesize("superclass", stmt.superclass);
 
     StringBuilder str = new StringBuilder();
 
     try {
       for (Stmt statement : stmt.methods) {
-      String clojureStr = parenthesize("methods", statement);
+      String clojureStr = parenthesize(statement);
       str.append(clojureStr);
       }
       
@@ -227,14 +234,26 @@ class AstPrinter implements Expr.Visitor<String>,
 
   @Override
   public String visitFunctionStmt(Stmt.Function stmt) {
-    String name   = parenthesize("stmt.name", stmt);
-    String params = parenthesize("stmt.params", stmt);
-
     StringBuilder str = new StringBuilder();
+
+    str.append("(defn ");
+    str.append(stmt.name.lexeme);
+    str.append(" [");
+
+    int idx = 0;
+    for (Token t : stmt.params) {
+      ++idx;
+      str.append(t.lexeme);
+      if (idx != stmt.params.size()) {
+        str.append(" ");
+      }
+    }
+
+    str.append("] ");
 
     try {
     for (Stmt statement : stmt.body) {
-      String clojureStr = parenthesize("body", statement);
+      String clojureStr = statement.accept(this);
       str.append(clojureStr);
     }
       
@@ -242,15 +261,14 @@ class AstPrinter implements Expr.Visitor<String>,
       Lox.runtimeError(error);
     }
 
-    str.append(name);
-    str.append(params);
+    str.append(")\n");
 
     return str.toString();
   }
 
   @Override
   public String visitReturnStmt(Stmt.Return stmt) {
-    return parenthesize(stmt.keyword.lexeme, stmt);
+    return stmt.value.accept(this);
   }
 
 
@@ -267,10 +285,10 @@ class AstPrinter implements Expr.Visitor<String>,
     return builder.toString();
   }
 
-  private String parenthesize(String name, Stmt... stmts) {
+  private String parenthesize(Stmt... stmts) {
     StringBuilder builder = new StringBuilder();
 
-    builder.append("(").append(name);
+    builder.append("(");
     for (Stmt stmt : stmts) {
       builder.append(" ");
       builder.append(stmt.accept(this));

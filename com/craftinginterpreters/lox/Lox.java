@@ -19,7 +19,8 @@ public class Lox {
     } else if (args.length == 1) {
       runFile(args[0]);
     } else {
-      runPrompt();
+      //runPrompt();
+      runFile("test.lox");
     }
   }
 
@@ -63,6 +64,24 @@ public class Lox {
     interpreter.interpret(statements);
   }
 
+  public static List<Stmt> getStatements(String source) {
+    Scanner scanner = new Scanner(source);
+    List<Token> tokens = scanner.scanTokens();
+    Parser parser = new Parser(tokens);
+    List<Stmt> statements = parser.parse();
+    
+    // Stop if there was a syntax error.
+    if (hadError) return null;
+    
+    Resolver resolver = new Resolver(interpreter);
+    resolver.resolve(statements);
+    
+    // Stop if there was a resolution error.
+    if (hadError) return null;
+    
+    return statements;
+  }
+
   static void error(int line, String message) {
     report(line, "", message) ;
 
@@ -77,7 +96,7 @@ public class Lox {
 
   static void error(Token token, String message) {
     if (token.type == TokenType.EOF) {
-      report(token.line, "at end", message);
+      report(token.line, " at end", message);
     } else {
       report(token.line, " at '" + token.lexeme + "'", message);
     }
